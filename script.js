@@ -13,6 +13,9 @@ const inputElevation = document.querySelector('.form__input--elevation');
 
 /////////////////////////////////////////////////////////////////
 // Geolocation API
+
+let map, mapEvent;
+
 if (navigator.geolocation)
   navigator.geolocation.getCurrentPosition(
     function (position) {
@@ -22,7 +25,7 @@ if (navigator.geolocation)
       const coords = [latitude, longitude];
 
       // Leaflet
-      const map = L.map('map').setView(coords, 13);
+      map = L.map('map').setView(coords, 13);
       // console.log(map);
 
       L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
@@ -30,28 +33,43 @@ if (navigator.geolocation)
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
-      map.on('click', function (mapEvent) {
-        // form.classList.remove('hidden');
-
-        console.log(mapEvent.latlng);
-        const { lat, lng } = mapEvent.latlng;
-
-        L.marker([lat, lng])
-          .addTo(map)
-          .bindPopup(
-            L.popup({
-              maxWidth: 250,
-              minWidth: 100,
-              autoClose: false,
-              closeOnClick: false,
-              className: 'running-popup',
-            })
-          )
-          .setPopupContent('Workout!')
-          .openPopup();
+      // Handling clicks on map
+      map.on('click', function (mapE) {
+        mapEvent = mapE;
+        form.classList.remove('hidden');
+        inputDistance.focus();
       });
     },
     function () {
       alert('Could not get your location!');
     }
   );
+
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  // Clear Input fields
+  inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = '';
+
+  // Display Marker
+  console.log(mapEvent.latlng);
+  const { lat, lng } = mapEvent.latlng;
+  L.marker([lat, lng])
+    .addTo(map)
+    .bindPopup(
+      L.popup({
+        maxWidth: 250,
+        minWidth: 100,
+        autoClose: false,
+        closeOnClick: false,
+        className: 'running-popup',
+      })
+    )
+    .setPopupContent('Workout!')
+    .openPopup();
+});
+
+inputType.addEventListener('change', function(){
+  inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+  inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
+})
